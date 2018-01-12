@@ -10,7 +10,8 @@
 set -ex
 
 export DEBIAN_FRONTEND=noninteractive
-export DEB_BUILD_OPTIONS="parallel=$(egrep -c '^processor' /proc/cpuinfo)"
+#export DEB_BUILD_OPTIONS="parallel=$(egrep -c '^processor' /proc/cpuinfo)"
+export DEB_BUILD_OPTIONS="parallel=12"
 
 if $IS_NIGHTLY; then
   PKGBASE="hhvm-nightly"

@@ -50,6 +50,8 @@ cd ${PREFIX}-$VERSION
 git checkout $HEAD
 git submodule update --init --recursive
 
+git describe --all --long --abbrev=40 --always > ACTINDO_COMPILER_ID
+
 # Delete stuff we dont' need
 find . -name '.git' | xargs rm -rf
 # ~ 500mb here

@@ -18,9 +18,17 @@ if [ ! -d "${ROOT}/${DISTRO}" ]; then
   exit 1
 fi
 
+export COMPILER_ID
+
+export VERSION
+export IS_NIGHTLY
+
 # unconfined security opt so gdb works
-docker run -it \
+DOCKER_HOST=unix:///var/run/docker.sock DOCKER_TLS_VERIFY="" docker run -it \
   --security-opt seccomp=unconfined \
+  -e "COMPILER_ID" \
+  -e "VERSION" \
+  -e "IS_NIGHTLY" \
   -v "$OUT":/var/out \
   -v "$NODIST":/var/nodist \
   -v "$ROOT":/opt/hhvm-packaging:ro \

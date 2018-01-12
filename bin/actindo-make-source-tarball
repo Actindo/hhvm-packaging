@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# Copyright (c) 2017-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. An additional grant
+# of patent rights can be found in the PATENTS file in the same directory.
+
+set -ex
+set -o pipefail
+
+ROOT="$(realpath "$(dirname $0)/..")"
+if [ "$ROOT" == "/opt/hhvm-packaging" ]; then
+  OUT=/var/out
+else
+  OUT="$ROOT/out/"
+fi
+
+REPO="$(realpath "$(dirname $0)/../../hhvm")"
+cd "$REPO"
+VERSION=$(git rev-parse --abbrev-ref HEAD|perl -p -e 's/^HHVM-//g')
+PREFIX=hhvm
+COMPILER_ID=$(git describe --all --long --abbrev=40 --always)
+
+echo "$REPO | $VERSION | $COMPILER_ID"
+IS_NIGHTLY=0
+TAR=${TAR:-tar}
+
+git reset --hard HEAD
+git clean -fdx
+
+echo "$COMPILER_ID" > ACTINDO_COMPILER_ID
+
+cp hphp/hhvm/generate-buildinfo.sh hphp/hhvm/generate-buildinfo.sh.save
+perl -pi -e "s~^(if \\[ -z \"\\\${COMPILER_ID}\".+)~# actindo\nCOMPILER_ID=\"${COMPILER_ID}\"\n# /actindo\n\$1~" hphp/hhvm/generate-buildinfo.sh
+
+cd ..
+$TAR zvcf "${OUT}/${PREFIX}-${VERSION}.tar.gz" \
+  --exclude="**/.git" \
+  --exclude="hhvm/third-party/webscalesqlclient/mysql-5.6/rocksdb" \
+  --exclude="hhvm/third-party/webscalesqlclient/mysql-5.6/xtrabackup" \
+  --exclude="hhvm/third-party/webscalesqlclient/mysql-5.6/rpg" \
+  --exclude="hhvm/third-party/webscalesqlclient/mysql-5.6/mysql-test" \
+  --exclude="hhvm/hphp/test/slow" \
+  --exclude="hhvm/hphp/test/quick" \
+  --exclude="hhvm/hphp/test/zend" \
+  --exclude="hhvm/hphp/test/zend7" \
+  --transform="s/^hhvm/${PREFIX}-${VERSION}/" "hhvm" \
+  | wc -l
+
+rm "hhvm/ACTINDO_COMPILER_ID"
+mv hhvm/hphp/hhvm/generate-buildinfo.sh.save hhvm/hphp/hhvm/generate-buildinfo.sh
